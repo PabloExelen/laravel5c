@@ -108,8 +108,8 @@ erDiagram
 
 ```bash
 # Clone the repository
-git clone https://github.com/USERNAME-YUSUF/laravel5d.git
-cd laravel5d
+git clone https://github.com/PabloExelen/laravel5c.git
+cd laravel5c
 
 # Install dependencies
 composer install
