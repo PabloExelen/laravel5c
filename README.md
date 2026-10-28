@@ -96,6 +96,11 @@ erDiagram
 - `order_items.unit_price` copies the menu price at the time of the order.
 - Order total = sum of `quantity × unit_price` of its items. It is computed, not stored.
 - A menu appears only once per order; the amount is stored in `quantity`.
+- Only customers can place orders. Cashiers and admins see the menu without the order form.
+- An order moves `pending` → `preparing` → `completed`. A `pending` or `preparing` order can be `cancelled`. `completed` and `cancelled` are final.
+- A customer can cancel only their own `pending` order. Cashiers and admins change the status of any order.
+- A category that still has menus, and a menu that is used in an order, cannot be deleted. Mark the menu as unavailable instead.
+- Only `admin` users can manage menus, categories, and tags.
 
 ## Tech Stack
 
@@ -129,15 +134,49 @@ php artisan serve
 
 Then open <http://localhost:8000>.
 
+### Demo accounts
+
+`php artisan migrate --seed` also creates sample menus, tags, orders, and these accounts:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@example.com` | `password` |
+| Cashier | `cashier@example.com` | `password` |
+| Customer | `customer@example.com` | `password` |
+
+### Pages
+
+| Page | Who |
+|---|---|
+| `/` (menu, with tag filter) | everyone |
+| `/register`, `/login` | guests |
+| `/profile`, `/orders`, `/orders/{id}` | signed-in users (a customer sees only their own orders) |
+| Place or cancel an order | customers |
+| `/staff/orders` (order queue, status changes) | cashiers and admins |
+| `/admin/menus`, `/admin/categories`, `/admin/tags` | admins |
+
+### Running the tests
+
+```bash
+php artisan test
+```
+
+The feature tests cover authentication, roles, profiles, the menu, order placement, order status changes, order history, and the admin pages.
+
 ## Project Structure
 
 ```
+app/Http/Controllers/  Page controllers (Admin/ and Staff/ for the staff areas)
+app/Http/Middleware/   Role check for staff and admin pages
+app/Services/      Order placement and status rules
 app/Models/        Eloquent models and relationships
 database/
   migrations/      Table definitions
   factories/       Fake data generators
   seeders/         Categories and sample data
 resources/views/   Blade templates
+routes/web.php      All routes
+tests/Feature/     Feature tests
 docs/
   database/        ERD and relationship documentation
   progress/        Phase tracker (P01, ...)
@@ -147,10 +186,10 @@ docs/
 
 - [x] Database design and documentation
 - [x] Migrations, models, factories, and seeders
-- [ ] Authentication and role-based access
-- [ ] Menu, category, and tag management
-- [ ] Ordering and order status
-- [ ] Order history
+- [x] Authentication and role-based access
+- [x] Menu, category, and tag management
+- [x] Ordering and order status
+- [x] Order history
 
 ## Author
 
