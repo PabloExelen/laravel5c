@@ -34,6 +34,8 @@ class DatabaseSeeder extends Seeder
             ->create(['role' => 'customer'])
             ->each(fn (User $user) => Profile::factory()->create(['user_id' => $user->id]));
 
+        $customers->first()->update(['name' => 'Customer One', 'email' => 'customer@example.com']);
+
         $tags = collect(['Spicy', 'Vegetarian', 'Cold', 'Hot', 'Best Seller'])
             ->map(fn (string $name) => Tag::create(['name' => $name]));
 
