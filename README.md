@@ -146,7 +146,7 @@ docs/
 ## Roadmap
 
 - [x] Database design and documentation
-- [ ] Migrations, models, factories, and seeders
+- [x] Migrations, models, factories, and seeders
 - [ ] Authentication and role-based access
 - [ ] Menu, category, and tag management
 - [ ] Ordering and order status

@@ -100,7 +100,7 @@ The `categories` table is populated by a seeder with the six built-in categories
 - **Unique constraints:** `users.email`, `profiles.user_id`, `categories.name`, `tags.name`, `orders.order_number`, and (`order_items.order_id`, `order_items.menu_id`) so a menu appears once per order and the amount is stored in `quantity`.
 - **Composite primary key:** the pivot table `menu_tag` uses its two foreign keys as the primary key, so a menu cannot get the same tag twice.
 - **Price history:** `order_items.unit_price` copies `menus.price` at the time of the order, so changing a menu price later does not change old orders.
-- **Order total** is computed, not stored: sum of `quantity × unit_price` over the items of an order.
+- **Order total** is computed, not stored: sum of `quantity × unit_price` over the items of an order, available as `Order::total()`.
 - **Availability:** only menus with `is_available = true` can be added to an order. This is enforced in application logic.
 - **Roles:** `customer` places orders, `cashier` updates the order status, `admin` manages menus, categories, and tags.
-- **Cascade rules (planned):** deleting a user cascades to their profile; deleting an order cascades to its items; deleting a category is restricted while menus still use it; deleting a menu is restricted while order items still use it; deleting a menu cascades to its `menu_tag` rows.
+- **Cascade rules:** deleting a user cascades to their profile and is restricted while the user still has orders, so order history is kept; deleting an order cascades to its items; deleting a category is restricted while menus still use it; deleting a menu is restricted while order items still use it; deleting a menu or a tag cascades to its `menu_tag` rows.
