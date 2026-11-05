@@ -5,7 +5,10 @@ CafeOrder is a cafe menu ordering web application built with **Laravel**, **Blad
 ## Features
 
 - Browse the cafe menu grouped into six categories:
-  Coffee, Non-Coffee, Tea, Snacks, Main Course, and Dessert
+  Kopi, Non-Kopi, Teh, Camilan, Makanan Berat, and Dessert
+  (38 demo menus typical of Indonesian cafes, such as Kopi Susu Gula Aren, Nasi Goreng Kampung, and Es Cendol)
+- Minimal, modern, responsive interface with live search, category chips, quantity steppers, a live cart total, toasts, and confirm dialogs
+- Dashboard for every role, a menu detail page, and an admin user management page
 - Tags for flexible menu labels (for example spicy, vegetarian, best seller)
 - Customer accounts with a profile (phone number and address)
 - Place an order with several menu items and a quantity for each
@@ -148,12 +151,15 @@ Then open <http://localhost:8000>.
 
 | Page | Who |
 |---|---|
-| `/` (menu, with tag filter) | everyone |
+| `/` (menu, live search, category and tag filter) | everyone |
+| `/menu/{id}` (menu detail) | everyone |
+| `/dashboard` | signed-in users (content depends on the role) |
 | `/register`, `/login` | guests |
 | `/profile`, `/orders`, `/orders/{id}` | signed-in users (a customer sees only their own orders) |
 | Place or cancel an order | customers |
 | `/staff/orders` (order queue, status changes) | cashiers and admins |
-| `/admin/menus`, `/admin/categories`, `/admin/tags` | admins |
+| `/admin/menus`, `/admin/categories`, `/admin/tags`, `/admin/users` | admins |
+| Delete a completed or cancelled order | admins |
 
 ### Running the tests
 
@@ -161,7 +167,7 @@ Then open <http://localhost:8000>.
 php artisan test
 ```
 
-The feature tests cover authentication, roles, profiles, the menu, order placement, order status changes, order history, and the admin pages.
+The feature tests cover authentication, roles, profiles, the menu, order placement, order status changes, order history, the admin pages, the dashboard, user management, the menu detail page, and the seeders.
 
 ## Project Structure
 
@@ -173,7 +179,7 @@ app/Models/        Eloquent models and relationships
 database/
   migrations/      Table definitions
   factories/       Fake data generators
-  seeders/         Categories and sample data
+  seeders/         Categories, Indonesian cafe menu, and sample data
 resources/views/   Blade templates
 routes/web.php      All routes
 tests/Feature/     Feature tests
@@ -190,6 +196,7 @@ docs/
 - [x] Menu, category, and tag management
 - [x] Ordering and order status
 - [x] Order history
+- [x] Indonesian cafe menu, minimal modern UI, dashboard, and complete CRUD (P03)
 
 ## Author
 
