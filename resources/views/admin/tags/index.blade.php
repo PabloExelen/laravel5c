@@ -3,34 +3,33 @@
 @section('title', 'Tags')
 
 @section('content')
-    <h1 class="text-2xl font-semibold">Tags</h1>
+    <x-page-header title="Tags" subtitle="Label seperti Pedas, Vegetarian, atau Best Seller." />
 
-    <form method="POST" action="{{ route('admin.tags.store') }}" class="mt-4 flex max-w-md gap-2">
+    <form method="POST" action="{{ route('admin.tags.store') }}" class="rise mb-6 flex max-w-md gap-2">
         @csrf
-        <input name="name" type="text" required placeholder="New tag" value="{{ old('name') }}"
-               class="grow rounded border border-stone-300 px-3 py-2 text-sm">
-        <button type="submit" class="rounded bg-amber-600 px-3 py-2 text-sm text-white hover:bg-amber-500">Add</button>
+        <input name="name" type="text" required placeholder="New tag" value="{{ old('name') }}" class="input">
+        <button type="submit" class="btn btn-primary">Add</button>
     </form>
 
-    <div class="mt-4 max-w-xl space-y-2">
+    <div class="max-w-2xl space-y-2">
         @forelse ($tags as $tag)
-            <div class="flex items-center gap-2 rounded border border-stone-200 bg-white p-2 text-sm">
-                <form method="POST" action="{{ route('admin.tags.update', $tag) }}" class="flex grow gap-2">
+            <div class="rise card flex flex-wrap items-center gap-3 p-3">
+                <span class="grid h-9 w-9 place-items-center rounded-lg bg-brand-50">🏷️</span>
+                <form method="POST" action="{{ route('admin.tags.update', $tag) }}" class="flex min-w-48 grow gap-2">
                     @csrf
                     @method('PUT')
-                    <input name="name" type="text" value="{{ $tag->name }}" required
-                           class="grow rounded border border-stone-300 px-2 py-1">
-                    <button type="submit" class="rounded border border-stone-300 px-2 py-1 hover:bg-stone-100">Rename</button>
+                    <input name="name" type="text" value="{{ $tag->name }}" required class="input py-1.5">
+                    <button type="submit" class="btn btn-ghost btn-sm">Rename</button>
                 </form>
-                <span class="text-xs text-stone-500">{{ $tag->menus_count }} menus</span>
-                <form method="POST" action="{{ route('admin.tags.destroy', $tag) }}" onsubmit="return confirm('Delete this tag?')">
+                <span class="badge bg-stone-100 text-stone-600">{{ $tag->menus_count }} menus</span>
+                <form method="POST" action="{{ route('admin.tags.destroy', $tag) }}" data-confirm="Delete {{ $tag->name }}?">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="rounded border border-red-300 px-2 py-1 text-red-700 hover:bg-red-50">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                 </form>
             </div>
         @empty
-            <p class="text-sm text-stone-500">No tag yet.</p>
+            <x-empty-state icon="🏷️" title="No tag yet" text="Add your first tag using the form above." />
         @endforelse
     </div>
 @endsection

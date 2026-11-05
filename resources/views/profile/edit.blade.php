@@ -3,27 +3,23 @@
 @section('title', 'Profile')
 
 @section('content')
-    <h1 class="text-2xl font-semibold">My profile</h1>
-    <p class="mt-1 text-sm text-stone-500">{{ $user->email }} ({{ $user->role }})</p>
+    <x-page-header title="My profile" :subtitle="$user->email.' · '.$user->role" />
 
-    <form method="POST" action="{{ route('profile.update') }}" class="mt-4 max-w-md space-y-4">
+    <form method="POST" action="{{ route('profile.update') }}" class="rise card max-w-xl space-y-5 p-6">
         @csrf
         @method('PUT')
         <div>
-            <label for="name" class="block text-sm font-medium">Name</label>
-            <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" required
-                   class="mt-1 w-full rounded border border-stone-300 px-3 py-2">
+            <label for="name" class="label">Name</label>
+            <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" required class="input">
         </div>
         <div>
-            <label for="phone" class="block text-sm font-medium">Phone</label>
-            <input id="phone" name="phone" type="text" value="{{ old('phone', $user->profile?->phone) }}"
-                   class="mt-1 w-full rounded border border-stone-300 px-3 py-2">
+            <label for="phone" class="label">Phone</label>
+            <input id="phone" name="phone" type="text" value="{{ old('phone', $user->profile?->phone) }}" class="input">
         </div>
         <div>
-            <label for="address" class="block text-sm font-medium">Address</label>
-            <input id="address" name="address" type="text" value="{{ old('address', $user->profile?->address) }}"
-                   class="mt-1 w-full rounded border border-stone-300 px-3 py-2">
+            <label for="address" class="label">Address</label>
+            <input id="address" name="address" type="text" value="{{ old('address', $user->profile?->address) }}" class="input">
         </div>
-        <button type="submit" class="rounded bg-amber-600 px-3 py-2 text-sm text-white hover:bg-amber-500">Save</button>
+        <button type="submit" class="btn btn-primary">Save</button>
     </form>
 @endsection

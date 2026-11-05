@@ -1,9 +1,9 @@
 @php
-    $badge = match ($status) {
-        'pending' => 'bg-amber-100 text-amber-800',
-        'preparing' => 'bg-blue-100 text-blue-800',
-        'completed' => 'bg-green-100 text-green-800',
-        default => 'bg-stone-200 text-stone-700',
+    [$badge, $dot] = match ($status) {
+        'pending' => ['bg-amber-50 text-amber-800', 'bg-amber-500'],
+        'preparing' => ['bg-sky-50 text-sky-800', 'bg-sky-500'],
+        'completed' => ['bg-emerald-50 text-emerald-800', 'bg-emerald-500'],
+        default => ['bg-stone-100 text-stone-600', 'bg-stone-400'],
     };
 @endphp
-<span class="rounded-full px-2 py-0.5 text-xs {{ $badge }}">{{ $status }}</span>
+<span class="badge {{ $badge }}"><span class="h-1.5 w-1.5 rounded-full {{ $dot }}"></span>{{ $status }}</span>
