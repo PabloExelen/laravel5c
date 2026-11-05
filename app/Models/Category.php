@@ -22,4 +22,22 @@ class Category extends Model
     {
         return $this->hasManyThrough(OrderItem::class, Menu::class);
     }
+
+    /**
+     * Emoji used on the menu page, chosen from the category name.
+     */
+    public function icon(): string
+    {
+        $name = mb_strtolower($this->name);
+
+        return match (true) {
+            str_contains($name, 'non') => '🥤',
+            str_contains($name, 'kopi'), str_contains($name, 'coffee') => '☕',
+            str_contains($name, 'teh'), str_contains($name, 'tea') => '🍵',
+            str_contains($name, 'camilan'), str_contains($name, 'snack') => '🍟',
+            str_contains($name, 'makanan'), str_contains($name, 'main') => '🍛',
+            str_contains($name, 'dessert'), str_contains($name, 'es ') => '🍨',
+            default => '🍽️',
+        };
+    }
 }

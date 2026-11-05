@@ -51,6 +51,13 @@ class MenuController extends Controller
         return redirect()->route('admin.menus.index')->with('success', 'Menu updated.');
     }
 
+    public function toggle(Menu $menu): RedirectResponse
+    {
+        $menu->update(['is_available' => ! $menu->is_available]);
+
+        return back()->with('success', $menu->name.' is now '.($menu->is_available ? 'available' : 'sold out').'.');
+    }
+
     public function destroy(Menu $menu): RedirectResponse
     {
         if ($menu->orderItems()->exists()) {

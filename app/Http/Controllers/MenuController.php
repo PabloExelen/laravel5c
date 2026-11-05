@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Menu;
 use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -24,5 +25,19 @@ class MenuController extends Controller
         $tags = Tag::orderBy('name')->get();
 
         return view('menu.index', compact('categories', 'tags', 'tag'));
+    }
+
+    public function show(Menu $menu): View
+    {
+        $menu->load(['category', 'tags']);
+
+        $related = Menu::with('tags')
+            ->where('category_id', $menu->category_id)
+            ->whereKeyNot($menu->id)
+            ->orderBy('name')
+            ->take(4)
+            ->get();
+
+        return view('menu.show', compact('menu', 'related'));
     }
 }

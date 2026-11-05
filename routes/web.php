@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
@@ -14,6 +15,7 @@ Route::get('/welcome', function () {
 });
 
 Route::get('/', [MenuController::class, 'index'])->name('home');
+Route::get('/menu/{menu}', [MenuController::class, 'show'])->name('menus.show');
 
 // Guests
 Route::middleware('guest')->group(function () {
@@ -25,6 +27,7 @@ Route::middleware('guest')->group(function () {
 
 // Signed-in users
 Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -54,7 +57,10 @@ Route::middleware(['auth', EnsureUserHasRole::class.':admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
+        Route::patch('menus/{menu}/availability', [Admin\MenuController::class, 'toggle'])->name('menus.toggle');
         Route::resource('menus', Admin\MenuController::class)->except('show');
         Route::resource('categories', Admin\CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('tags', Admin\TagController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('users', Admin\UserController::class)->except('show');
+        Route::delete('orders/{order}', [Admin\OrderController::class, 'destroy'])->name('orders.destroy');
     });
