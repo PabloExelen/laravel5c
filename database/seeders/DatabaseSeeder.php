@@ -2,12 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Category;
 use App\Models\Menu;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Profile;
-use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -16,7 +14,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(PeriodeSeeder::class);
-        $this->call(CategorySeeder::class);
+        $this->call(IndonesianMenuSeeder::class);
 
         User::factory()->create([
             'name' => 'Admin',
@@ -25,45 +23,38 @@ class DatabaseSeeder extends Seeder
         ]);
 
         User::factory()->create([
-            'name' => 'Cashier',
+            'name' => 'Kasir',
             'email' => 'cashier@example.com',
             'role' => 'cashier',
         ]);
 
-        $customers = User::factory(3)
-            ->create(['role' => 'customer'])
-            ->each(fn (User $user) => Profile::factory()->create(['user_id' => $user->id]));
+        $customers = collect([
+            ['Siti Rahma', 'customer@example.com'],
+            ['Budi Santoso', 'budi@example.com'],
+            ['Dewi Lestari', 'dewi@example.com'],
+        ])->map(function (array $data) {
+            $user = User::factory()->create(['name' => $data[0], 'email' => $data[1], 'role' => 'customer']);
+            Profile::factory()->create(['user_id' => $user->id]);
 
-        $customers->first()->update(['name' => 'Customer One', 'email' => 'customer@example.com']);
+            return $user;
+        });
 
-        $tags = collect(['Spicy', 'Vegetarian', 'Cold', 'Hot', 'Best Seller'])
-            ->map(fn (string $name) => Tag::create(['name' => $name]));
-
-        $menus = collect();
-
-        foreach (Category::all() as $category) {
-            $created = Menu::factory(2)->create(['category_id' => $category->id]);
-
-            foreach ($created as $menu) {
-                $menu->tags()->attach($tags->random(2)->pluck('id'));
-                $menus->push($menu);
-            }
-        }
-
-        $statuses = ['pending', 'preparing', 'completed', 'cancelled'];
+        $menus = Menu::where('is_available', true)->get();
+        $statuses = ['pending', 'preparing', 'completed', 'completed', 'completed', 'cancelled'];
 
         foreach ($customers as $customer) {
-            for ($i = 0; $i < 2; $i++) {
+            for ($i = 0; $i < 4; $i++) {
                 $order = Order::factory()->create([
                     'user_id' => $customer->id,
                     'status' => $statuses[array_rand($statuses)],
+                    'ordered_at' => now()->subDays(rand(0, 6))->subMinutes(rand(0, 600)),
                 ]);
 
-                foreach ($menus->random(3) as $menu) {
+                foreach ($menus->random(rand(2, 4)) as $menu) {
                     OrderItem::factory()->create([
                         'order_id' => $order->id,
                         'menu_id' => $menu->id,
-                        'quantity' => fake()->numberBetween(1, 3),
+                        'quantity' => rand(1, 3),
                         'unit_price' => $menu->price,
                     ]);
                 }
