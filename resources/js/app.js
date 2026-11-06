@@ -95,7 +95,7 @@ if (filterRoot) {
     });
 }
 
-/* Cart on the menu page: quantity steppers, live summary and total */
+/* Cart on the menu page: quantity steppers, preferences, live summary and total */
 const cart = $('[data-cart]');
 if (cart) {
     const cards = $$('[data-menu-card]');
@@ -104,8 +104,13 @@ if (cart) {
     const totalEl = $$('[data-cart-total]');
     const countEls = $$('[data-cart-count]');
     const submit = $('[data-cart-submit]', cart);
+    const prefs = new Map();
+    const choices = {
+        drink: ['Normal', 'Less sugar', 'No sugar', 'Less ice', 'No ice'],
+        food: ['Normal', 'Extra spicy', 'Not spicy'],
+    };
 
-    const clamp = (value) => Math.max(0, Math.min(20, Number.isFinite(value) ? value : 0));
+    const clamp = (value, max) => Math.max(0, Math.min(max, Number.isFinite(value) ? value : 0));
 
     const render = () => {
         let total = 0;
@@ -115,25 +120,46 @@ if (cart) {
         cards.forEach((card) => {
             const input = $('[data-qty-input]', card);
             if (!input) return;
-            const qty = clamp(parseInt(input.value, 10));
+            const max = parseInt(card.dataset.max || '20', 10);
+            const qty = clamp(parseInt(input.value, 10), max);
             input.value = qty;
             card.classList.toggle('ring-2', qty > 0);
             card.classList.toggle('ring-brand-500', qty > 0);
 
             if (qty > 0) {
+                const id = input.name.match(/\d+/)[0];
                 const price = parseInt(card.dataset.price, 10);
                 total += qty * price;
                 count += qty;
 
                 const row = document.createElement('li');
-                row.className = 'flex items-start justify-between gap-3 text-sm';
+                row.className = 'space-y-1.5 text-sm';
+                const line = document.createElement('div');
+                line.className = 'flex items-start justify-between gap-3';
                 const name = document.createElement('span');
                 name.className = 'text-stone-700';
                 name.textContent = qty + '× ' + card.dataset.name;
                 const sub = document.createElement('span');
                 sub.className = 'whitespace-nowrap font-medium';
                 sub.textContent = rupiah(qty * price);
-                row.append(name, sub);
+                line.append(name, sub);
+                row.append(line);
+
+                const set = choices[card.dataset.opts];
+                if (set) {
+                    const select = document.createElement('select');
+                    select.name = 'options[' + id + ']';
+                    select.className = 'w-full rounded-lg border border-stone-200 bg-white px-2 py-1 text-xs text-stone-600';
+                    set.forEach((choice) => {
+                        const option = document.createElement('option');
+                        option.value = choice === 'Normal' ? '' : choice;
+                        option.textContent = (window.__t && window.__t[choice]) || choice;
+                        select.append(option);
+                    });
+                    select.value = prefs.get(id) || '';
+                    select.addEventListener('change', () => prefs.set(id, select.value));
+                    row.append(select);
+                }
                 list.append(row);
             }
         });
@@ -148,9 +174,10 @@ if (cart) {
     cards.forEach((card) => {
         const input = $('[data-qty-input]', card);
         if (!input) return;
+        const max = () => parseInt(card.dataset.max || '20', 10);
         $$('[data-qty-step]', card).forEach((button) => {
             button.addEventListener('click', () => {
-                input.value = clamp(parseInt(input.value, 10) + parseInt(button.dataset.qtyStep, 10));
+                input.value = clamp(parseInt(input.value, 10) + parseInt(button.dataset.qtyStep, 10), max());
                 render();
             });
         });
@@ -162,10 +189,104 @@ if (cart) {
             const input = $('[data-qty-input]', card);
             if (input) input.value = 0;
         });
+        prefs.clear();
         render();
     });
 
+    /* Table number only matters when eating in */
+    const tableField = $('[data-table-field]', cart);
+    const types = $$('[data-order-type]', cart);
+    const syncType = () => {
+        const dineIn = types.find((radio) => radio.checked)?.value !== 'takeaway';
+        tableField?.classList.toggle('hidden', !dineIn);
+    };
+    types.forEach((radio) => radio.addEventListener('change', syncType));
+    syncType();
+
     render();
+}
+
+/* Photo preview in the admin menu form */
+$$('[data-image-input]').forEach((input) => {
+    const preview = $(input.dataset.imageInput);
+    input.addEventListener('change', () => {
+        const file = input.files?.[0];
+        if (!file || !preview) return;
+        preview.src = URL.createObjectURL(file);
+        preview.classList.remove('hidden');
+        $('[data-image-placeholder]')?.classList.add('hidden');
+    });
+});
+
+/* Simulated payment: short "processing" state before the form is sent */
+$$('form[data-processing]').forEach((form) => {
+    form.addEventListener('submit', (event) => {
+        if (form.dataset.sent === '1') return;
+        event.preventDefault();
+        form.dataset.sent = '1';
+        const button = $('button[type=submit]', form);
+        if (button) {
+            button.disabled = true;
+            button.textContent = form.dataset.processing;
+        }
+        setTimeout(() => form.submit(), 1400);
+    });
+});
+
+/* Copy to clipboard: <button data-copy="text"> */
+$$('[data-copy]').forEach((button) => {
+    button.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(button.dataset.copy);
+            const original = button.textContent;
+            button.textContent = button.dataset.copied || 'Copied';
+            setTimeout(() => (button.textContent = original), 1500);
+        } catch (e) {
+            /* clipboard not available: ignore */
+        }
+    });
+});
+
+/* Order page: refresh when the cashier changes the status or the payment */
+const tracker = $('[data-order-poll]');
+if (tracker) {
+    const finished = ['completed', 'cancelled'];
+    const timer = setInterval(async () => {
+        try {
+            const response = await fetch(tracker.dataset.orderPoll, { headers: { Accept: 'application/json' } });
+            if (!response.ok) return;
+            const state = await response.json();
+            if (state.status !== tracker.dataset.status || state.payment_status !== tracker.dataset.payment) {
+                clearInterval(timer);
+                const toast = $('#live-toast');
+                toast?.classList.remove('hidden');
+                setTimeout(() => window.location.reload(), 1200);
+            } else if (finished.includes(state.status) && state.payment_status !== 'unpaid') {
+                clearInterval(timer);
+            }
+        } catch (e) {
+            /* offline: try again next time */
+        }
+    }, 6000);
+}
+
+/* Staff queue: tell the cashier when new orders arrive */
+const queue = $('[data-queue-poll]');
+if (queue) {
+    const banner = $('#new-orders-banner');
+    setInterval(async () => {
+        try {
+            const response = await fetch(queue.dataset.queuePoll + '?after=' + queue.dataset.latest, { headers: { Accept: 'application/json' } });
+            if (!response.ok) return;
+            const state = await response.json();
+            if (state.new_orders > 0 && banner) {
+                $('[data-new-count]', banner).textContent = state.new_orders;
+                banner.classList.remove('hidden');
+            }
+        } catch (e) {
+            /* ignore */
+        }
+    }, 10000);
 }
 
 /* Table search: <input data-table-search="#table-id"> filters rows with data-row */

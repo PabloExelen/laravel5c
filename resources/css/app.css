@@ -104,3 +104,9 @@ dialog::backdrop {
         scroll-behavior: auto;
     }
 }
+
+@media print {
+    body {
+        background: #fff;
+    }
+}

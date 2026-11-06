@@ -6,4 +6,4 @@
         default => ['bg-stone-100 text-stone-600', 'bg-stone-400'],
     };
 @endphp
-<span class="badge {{ $badge }}"><span class="h-1.5 w-1.5 rounded-full {{ $dot }}"></span>{{ $status }}</span>
+<span class="badge {{ $badge }}"><span class="h-1.5 w-1.5 rounded-full {{ $dot }}"></span>{{ __($status) }}</span>
