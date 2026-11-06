@@ -17,6 +17,12 @@ class Order extends Model
         'order_number',
         'status',
         'note',
+        'order_type',
+        'table_number',
+        'payment_method',
+        'payment_status',
+        'payment_reference',
+        'paid_at',
         'ordered_at',
     ];
 
@@ -24,6 +30,7 @@ class Order extends Model
     {
         return [
             'ordered_at' => 'datetime',
+            'paid_at' => 'datetime',
         ];
     }
 
@@ -46,5 +53,10 @@ class Order extends Model
     public function total(): int
     {
         return $this->items->sum(fn (OrderItem $item) => $item->quantity * $item->unit_price);
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'paid';
     }
 }

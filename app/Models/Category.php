@@ -40,4 +40,20 @@ class Category extends Model
             default => '🍽️',
         };
     }
+
+    /**
+     * Which preference choices the cart offers: drink (sugar and ice), food (spice) or none.
+     */
+    public function optionSet(): string
+    {
+        $name = mb_strtolower($this->name);
+
+        return match (true) {
+            str_contains($name, 'kopi'), str_contains($name, 'coffee'),
+            str_contains($name, 'teh'), str_contains($name, 'tea') => 'drink',
+            str_contains($name, 'camilan'), str_contains($name, 'snack'),
+            str_contains($name, 'makanan'), str_contains($name, 'main') => 'food',
+            default => 'none',
+        };
+    }
 }
