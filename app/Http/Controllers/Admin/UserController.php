@@ -55,12 +55,15 @@ class UserController extends Controller
             'password' => $data['password'],
         ]);
 
+        // accounts made by an admin do not need email verification
+        $user->forceFill(['email_verified_at' => now()])->save();
+
         $user->profile()->create([
             'phone' => $data['phone'] ?? null,
             'address' => $data['address'] ?? null,
         ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'User created.');
+        return redirect()->route('admin.users.index')->with('success', __('User created.'));
     }
 
     public function edit(User $user): View
@@ -82,7 +85,7 @@ class UserController extends Controller
         ]);
 
         if ($user->id === $request->user()->id && $data['role'] !== $user->role) {
-            return back()->withInput()->withErrors(['role' => 'You cannot change your own role.']);
+            return back()->withInput()->withErrors(['role' => __('You cannot change your own role.')]);
         }
 
         $attributes = [
@@ -102,22 +105,22 @@ class UserController extends Controller
             'address' => $data['address'] ?? null,
         ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'User updated.');
+        return redirect()->route('admin.users.index')->with('success', __('User updated.'));
     }
 
     public function destroy(Request $request, User $user): RedirectResponse
     {
         if ($user->id === $request->user()->id) {
-            return back()->with('error', 'You cannot delete your own account.');
+            return back()->with('error', __('You cannot delete your own account.'));
         }
 
         if ($user->orders()->exists()) {
-            return back()->with('error', 'This user has orders and cannot be deleted.');
+            return back()->with('error', __('This user has orders and cannot be deleted.'));
         }
 
         $user->profile()->delete();
         $user->delete();
 
-        return redirect()->route('admin.users.index')->with('success', 'User deleted.');
+        return redirect()->route('admin.users.index')->with('success', __('User deleted.'));
     }
 }

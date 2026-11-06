@@ -31,6 +31,6 @@ class ProfileController extends Controller
             'address' => $data['address'] ?? null,
         ]);
 
-        return redirect()->route('profile.edit')->with('success', 'Profile updated.');
+        return redirect()->route('profile.edit')->with('success', __('Profile updated.'));
     }
 }

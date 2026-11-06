@@ -26,7 +26,7 @@ class CategoryController extends Controller
 
         Category::create($data);
 
-        return back()->with('success', 'Category created.');
+        return back()->with('success', __('Category created.'));
     }
 
     public function update(Request $request, Category $category): RedirectResponse
@@ -37,17 +37,17 @@ class CategoryController extends Controller
 
         $category->update($data);
 
-        return back()->with('success', 'Category updated.');
+        return back()->with('success', __('Category updated.'));
     }
 
     public function destroy(Category $category): RedirectResponse
     {
         if ($category->menus()->exists()) {
-            return back()->with('error', 'This category still has menus. Move or delete them first.');
+            return back()->with('error', __('This category still has menus. Move or delete them first.'));
         }
 
         $category->delete();
 
-        return back()->with('success', 'Category deleted.');
+        return back()->with('success', __('Category deleted.'));
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Profile;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,10 +34,12 @@ class AuthController extends Controller
 
         Profile::create(['user_id' => $user->id]);
 
+        event(new Registered($user));
+
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('home')->with('success', 'Welcome to CafeOrder.');
+        return redirect()->route('home')->with('success', __('Welcome to CafeOrder. Please check your email to verify your account.'));
     }
 
     public function showLogin(): View
@@ -53,7 +56,7 @@ class AuthController extends Controller
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()
-                ->withErrors(['email' => 'These credentials do not match our records.'])
+                ->withErrors(['email' => __('These credentials do not match our records.')])
                 ->onlyInput('email');
         }
 

@@ -26,7 +26,7 @@ class TagController extends Controller
 
         Tag::create($data);
 
-        return back()->with('success', 'Tag created.');
+        return back()->with('success', __('Tag created.'));
     }
 
     public function update(Request $request, Tag $tag): RedirectResponse
@@ -37,13 +37,13 @@ class TagController extends Controller
 
         $tag->update($data);
 
-        return back()->with('success', 'Tag updated.');
+        return back()->with('success', __('Tag updated.'));
     }
 
     public function destroy(Tag $tag): RedirectResponse
     {
         $tag->delete();
 
-        return back()->with('success', 'Tag deleted.');
+        return back()->with('success', __('Tag deleted.'));
     }
 }

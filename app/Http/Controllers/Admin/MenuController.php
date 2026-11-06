@@ -8,15 +8,35 @@ use App\Models\Menu;
 use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class MenuController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $menus = Menu::with(['category', 'tags'])->orderBy('name')->get();
+        $search = trim((string) $request->query('q', ''));
+        $categoryId = $request->query('category');
+        $availability = $request->query('availability');
 
-        return view('admin.menus.index', compact('menus'));
+        $menus = Menu::with(['category', 'tags'])
+            ->when($search !== '', fn ($query) => $query->where(
+                fn ($inner) => $inner->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+            ))
+            ->when($categoryId, fn ($query) => $query->where('category_id', (int) $categoryId))
+            ->when($availability === 'available', fn ($query) => $query->where('is_available', true))
+            ->when($availability === 'sold_out', fn ($query) => $query->where(
+                fn ($inner) => $inner->where('is_available', false)->orWhere('stock', 0)
+            ))
+            ->when($availability === 'low_stock', fn ($query) => $query->whereBetween('stock', [1, 5]))
+            ->orderBy('name')
+            ->paginate(15)
+            ->withQueryString();
+
+        $categories = Category::orderBy('name')->get();
+
+        return view('admin.menus.index', compact('menus', 'categories', 'search', 'categoryId', 'availability'));
     }
 
     public function create(): View
@@ -28,10 +48,16 @@ class MenuController extends Controller
     {
         $data = $this->validated($request);
 
-        $menu = Menu::create($this->attributes($request, $data));
+        $attributes = $this->attributes($request, $data);
+
+        if ($request->hasFile('image')) {
+            $attributes['image'] = $request->file('image')->store('menus', 'public');
+        }
+
+        $menu = Menu::create($attributes);
         $menu->tags()->sync($data['tag_ids'] ?? []);
 
-        return redirect()->route('admin.menus.index')->with('success', 'Menu created.');
+        return redirect()->route('admin.menus.index')->with('success', __('Menu created.'));
     }
 
     public function edit(Menu $menu): View
@@ -45,28 +71,39 @@ class MenuController extends Controller
     {
         $data = $this->validated($request);
 
-        $menu->update($this->attributes($request, $data));
+        $attributes = $this->attributes($request, $data);
+
+        if ($request->hasFile('image')) {
+            $this->deleteStoredImage($menu);
+            $attributes['image'] = $request->file('image')->store('menus', 'public');
+        } elseif ($request->boolean('remove_image')) {
+            $this->deleteStoredImage($menu);
+            $attributes['image'] = null;
+        }
+
+        $menu->update($attributes);
         $menu->tags()->sync($data['tag_ids'] ?? []);
 
-        return redirect()->route('admin.menus.index')->with('success', 'Menu updated.');
+        return redirect()->route('admin.menus.index')->with('success', __('Menu updated.'));
     }
 
     public function toggle(Menu $menu): RedirectResponse
     {
         $menu->update(['is_available' => ! $menu->is_available]);
 
-        return back()->with('success', $menu->name.' is now '.($menu->is_available ? 'available' : 'sold out').'.');
+        return back()->with('success', __(':name is now :state.', ['name' => $menu->name, 'state' => $menu->is_available ? __('available') : __('sold out')]));
     }
 
     public function destroy(Menu $menu): RedirectResponse
     {
         if ($menu->orderItems()->exists()) {
-            return back()->with('error', 'This menu is used in orders. Mark it as unavailable instead of deleting it.');
+            return back()->with('error', __('This menu is used in orders. Mark it as unavailable instead of deleting it.'));
         }
 
+        $this->deleteStoredImage($menu);
         $menu->delete();
 
-        return redirect()->route('admin.menus.index')->with('success', 'Menu deleted.');
+        return redirect()->route('admin.menus.index')->with('success', __('Menu deleted.'));
     }
 
     /**
@@ -79,6 +116,9 @@ class MenuController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'integer', 'min:0', 'max:1000000'],
+            'stock' => ['nullable', 'integer', 'min:0', 'max:9999'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'remove_image' => ['nullable', 'boolean'],
             'is_available' => ['nullable', 'boolean'],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['integer', 'exists:tags,id'],
@@ -96,8 +136,19 @@ class MenuController extends Controller
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'price' => $data['price'],
+            'stock' => $data['stock'] ?? null,
             'is_available' => $request->boolean('is_available'),
         ];
+    }
+
+    /**
+     * Only files uploaded through the form are deleted; photos shipped in public/images stay.
+     */
+    private function deleteStoredImage(Menu $menu): void
+    {
+        if ($menu->image && ! str_starts_with($menu->image, 'images/') && ! str_starts_with($menu->image, 'http')) {
+            Storage::disk('public')->delete($menu->image);
+        }
     }
 
     /**
