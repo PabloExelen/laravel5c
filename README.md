@@ -9,6 +9,12 @@ CafeOrder is a cafe menu ordering web application built with **Laravel**, **Blad
   (38 demo menus typical of Indonesian cafes, such as Kopi Susu Gula Aren, Nasi Goreng Kampung, and Es Cendol)
 - Minimal, modern, responsive interface with live search, category chips, quantity steppers, a live cart total, toasts, and confirm dialogs
 - Dashboard for every role, a menu detail page, and an admin user management page
+- Menu photos (upload or shipped files), stock, order type (dine in or takeaway), table number, and item preferences
+- Simulated payments (QRIS, virtual account, e-wallet, cash with change), printable receipt, and live order updates
+- Sales reports with CSV export (admin)
+- Password reset and email verification
+- Indonesian and English interface (language switch in the navbar)
+- 72 menus, 40 customers, and 1000 demo orders from the seeder
 - Tags for flexible menu labels (for example spicy, vegetarian, best seller)
 - Customer accounts with a profile (phone number and address)
 - Place an order with several menu items and a quantity for each
@@ -154,6 +160,10 @@ Then open <http://localhost:8000>.
 | `/` (menu, live search, category and tag filter) | everyone |
 | `/menu/{id}` (menu detail) | everyone |
 | `/dashboard` | signed-in users (content depends on the role) |
+| `/forgot-password`, `/reset-password/{token}` | guests |
+| `/email/verify` | signed-in users |
+| `/orders/{id}/pay`, `/orders/{id}/receipt` | the customer who owns the order (receipt: staff too) |
+| `/admin/reports` and CSV export | admins |
 | `/register`, `/login` | guests |
 | `/profile`, `/orders`, `/orders/{id}` | signed-in users (a customer sees only their own orders) |
 | Place or cancel an order | customers |
@@ -197,6 +207,7 @@ docs/
 - [x] Ordering and order status
 - [x] Order history
 - [x] Indonesian cafe menu, minimal modern UI, dashboard, and complete CRUD (P03)
+- [x] Photos, stock, simulated payments, receipts, reports, password reset, email verification, and Indonesian interface (P04)
 
 ## Author
 
@@ -205,3 +216,15 @@ Muhammad Yusuf — NPM 2410010526 — 5C TI REG BJB
 ## License
 
 Released under the [MIT License](https://opensource.org/licenses/MIT).
+
+## Setup notes for P04
+
+```bash
+php artisan storage:link        # uploaded menu photos
+php artisan migrate:fresh --seed
+php artisan menu:link-photos    # after adding photos to public/images/menu (see docs/menu-photos.md)
+```
+
+- Set `APP_LOCALE=id` in `.env` for the Indonesian interface by default (the tests force English).
+- Mail uses the `log` driver: password reset and verification links are written to `storage/logs/laravel.log`.
+- The seeder creates 1000 orders and takes a few seconds. Change it with `config(['seeding.orders' => 200])` or edit `DemoDataSeeder`.
