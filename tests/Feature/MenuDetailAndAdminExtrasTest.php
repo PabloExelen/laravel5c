@@ -102,8 +102,13 @@ class MenuDetailAndAdminExtrasTest extends CafeTestCase
 
     public function test_full_seeder_runs_and_creates_demo_orders(): void
     {
+        config(['seeding.customers' => 5, 'seeding.orders' => 25]);
+
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertGreaterThan(0, Order::count());
+        $this->assertSame(25, Order::count());
+        $this->assertSame(5, \App\Models\User::where('role', 'customer')->count());
+        $this->assertSame(3, \App\Models\User::where('role', 'cashier')->count());
+        $this->assertSame(0, Order::where('payment_status', 'paid')->whereNull('paid_at')->count());
     }
 }
